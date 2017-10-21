@@ -1,0 +1,36 @@
+{
+  "name": "hobby-app-node",
+  "version": "1.0.0",
+  "description": "An app that allows users store their hobbies",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://olaoluwa_98@bitbucket.org/olaoluwa_98/hobby-app-node.git"
+  },
+  "keywords": [
+    "hobby",
+    "likes"
+  ],
+  "authors": [
+    {
+      "name": "Emmanuel Awotunde",
+      "email": "awotunde.emmanuel1@gmail.com"
+    }
+  ],
+  "license": "MIT",
+  "homepage": "https://bitbucket.org/olaoluwa_98/hobby-app-node#readme",
+  "dependencies": {
+    "cookie-parser": "^1.4.3",
+    "cors": "^2.8.4",
+    "express": "^4.16.2",
+    "express-session": "^1.15.6",
+    "mongodb": "^2.2.33",
+    "mongoose": "^4.12.3",
+    "morgan": "^1.9.0",
+    "passport": "^0.4.0"
+  }
+}
