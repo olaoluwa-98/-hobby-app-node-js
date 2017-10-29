@@ -91,4 +91,10 @@ UserSchema.post('save', function(error, doc, next) {
   }
 });
 
+UserSchema.on('index', function (err) {
+  if (err) {
+    console.error(err);
+  }
+});
+
 module.exports = mongoose.model('User', UserSchema);

@@ -5,9 +5,17 @@ const User = require('../models/user.js');
 
 var jwt = require('jsonwebtoken');
 const app = express();
+const validator = require('express-validator');
 
 const secret = 'hobbyappsessiontoken';
 app.set('hobby_secret', secret); // secret variable
+
+// Twilio Credentials
+const accountSid = 'AC98aa039aab01649db06b22019d47f0b8';
+const authToken = 'bdb73c7e8d8a039499c629b6428239fa';
+
+// require the Twilio module and create a REST client
+const client = require('twilio')(accountSid, authToken);
 
 router.use(function(req, res, next) {
   let token = req.headers['x-access-token'];
@@ -88,14 +96,41 @@ router.put('/unfav-hobby', function(req, res, next){
 });
 
 router.post('/add-hobby', function(req, res, next){
+  req.check("title", "Enter a valid title, Max of 30 chars.").exists().isLength({max: 30});
+  req.check("body", "Enter a valid description, Max of 140 chars like twitter.").exists().isLength({max: 140});
+  var errors = req.validationErrors();
+        if (errors)
+          return res.status(422).json({ success:false, message: 'there are invalid inputs', errors:errors});
   req.body.user_id = req.decoded.user_id;
   Hobby.create(req.body)
   .then(function(hobby){
-    return res.json({ success: true, message: "New Hobby Added", created_at: hobby.created_at });
+    client.messages
+    .create({
+      to: '+23a4' + req.decoded.phone_no.slice(1),
+      from: '+13059164641',
+      body: '\n--Message from Emmanuel Awotunde\'s HobbyApp--'
+      + '\nHello @' + req.decoded.username
+      + '\nYou Added A new Hobby Successfully\nTitle:\t' + hobby.title
+      + '\nDescription:\t' + hobby.body
+      + '\n At ' + hobby.created_at,
+    })
+    .then((message) => {
+      console.log(message);
+      return res.json({ success: true, message: "New Hobby Added (SMS and Mail Sent!)", created_at: hobby.created_at });
+    })
+    .catch(function(err) {
+      console.error(err);
+      return res.status(422).json({ success:false, message: 'New Hobby Added But SMS failed to send', type:2, errors:err, created_at:hobby.created_at});
+    });
   }).catch(next);
 });
 
 router.put('/edit-hobby/', function(req, res, next){
+  req.check("title", "Enter a valid title, Max of 30 chars.").exists().isLength({max: 30});
+  req.check("body", "Enter a valid description, Max of 140 chars like twitter.").exists().isLength({max: 140});
+  var errors = req.validationErrors();
+        if (errors)
+          return res.status(422).json({ success:false, message: 'there are invalid inputs', type:2, errors:errors});
   Hobby.findByIdAndUpdate({user_id: req.decoded.user_id, _id: req.body.hobby_id})
   .then(function(hobby){
     return res.send(hobby);
