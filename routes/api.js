@@ -3,7 +3,7 @@ const router = express.Router();
 const Hobby = require('../models/hobby.js');
 const User = require('../models/user.js');
 
-var jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const app = express();
 const validator = require('express-validator');
 
@@ -16,6 +16,15 @@ const authToken = 'bdb73c7e8d8a039499c629b6428239fa';
 
 // require the Twilio module and create a REST client
 const client = require('twilio')(accountSid, authToken);
+const aws = require('aws-sdk');
+aws.config.loadFromPath('config.json');
+var ses = new aws.SES({apiVersion: '2010-12-01'});
+
+// send to list
+var to = ['email@example.com']
+
+// this must relate to a verified SES account
+var from = 'no-reply@hobbyapp.co';
 
 router.use(function(req, res, next) {
   let token = req.headers['x-access-token'];
@@ -106,7 +115,7 @@ router.post('/add-hobby', function(req, res, next){
   .then(function(hobby){
     client.messages
     .create({
-      to: '+23a4' + req.decoded.phone_no.slice(1),
+      to: '+234' + req.decoded.phone_no.slice(1),
       from: '+13059164641',
       body: '\n--Message from Emmanuel Awotunde\'s HobbyApp--'
       + '\nHello @' + req.decoded.username
@@ -116,11 +125,66 @@ router.post('/add-hobby', function(req, res, next){
     })
     .then((message) => {
       console.log(message);
-      return res.json({ success: true, message: "New Hobby Added (SMS and Mail Sent!)", created_at: hobby.created_at });
+      ses.sendEmail( { 
+         Source: from, 
+         Destination: { ToAddresses: [req.decoded.email] },
+         Message: {
+             Subject: {
+                Data: 'Emmanuel Awotunde\'s HobbyApp Notification'
+             },
+             Body: {
+                 Text: {
+                     Data: '\n--Message from Emmanuel Awotunde\'s HobbyApp--'
+                          + '\nHello @' + req.decoded.username
+                          + '\nYou Added A new Hobby Successfully\nTitle:\t' + hobby.title
+                          + '\nDescription:\t' + hobby.body
+                          + '\n At ' + hobby.created_at,
+                 }
+              }
+         }
+      }
+      , function(err, data) {
+          if(err)
+          {
+            console.log(err);
+            return res.status(422).json({ success:false, message: 'New Hobby Added (SMS sent but Email failed to send)', type:2,
+             errors:err, created_at:hobby.created_at});
+          }
+            console.log(data);
+            return res.json({ success: true, message: "New Hobby Added (SMS and Mail Sent!)", created_at: hobby.created_at });
+       });      
     })
-    .catch(function(err) {
-      console.error(err);
-      return res.status(422).json({ success:false, message: 'New Hobby Added But SMS failed to send', type:2, errors:err, created_at:hobby.created_at});
+    .catch(function(sms_err) {
+      console.error(sms_err);
+      ses.sendEmail( { 
+         Source: from, 
+         Destination: { ToAddresses: [req.decoded.email] },
+         Message: {
+             Subject: {
+                Data: 'Emmanuel Awotunde\'s HobbyApp Notification'
+             },
+             Body: {
+                 Text: {
+                     Data: '\n--Message from Emmanuel Awotunde\'s HobbyApp--'
+                          + '\nHello @' + req.decoded.username
+                          + '\nYou Added A new Hobby Successfully\nTitle:\t' + hobby.title
+                          + '\nDescription:\t' + hobby.body
+                          + '\n At ' + hobby.created_at,
+                 }
+              }
+         }
+      }
+      , function(err, data) {
+          if(err)
+          {
+            console.log(err);
+            return res.status(422).json({ success:false, message: 'New Hobby Added (SMS and Email failed to send)', type:2,
+             errors:err, sms_err:sms_err, created_at:hobby.created_at});
+          }
+            console.log(data);
+            return res.json({ success: true, message: "New Hobby Added (SMS failed to send but Mail Sent!)", 
+            errrors: sms_err, mail_data:data, created_at: hobby.created_at });
+       });
     });
   }).catch(next);
 });
