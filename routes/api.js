@@ -16,15 +16,11 @@ const authToken = 'bdb73c7e8d8a039499c629b6428239fa';
 
 // require the Twilio module and create a REST client
 const client = require('twilio')(accountSid, authToken);
+
+// Amazon aws SES
 const aws = require('aws-sdk');
 aws.config.loadFromPath('config.json');
-var ses = new aws.SES({apiVersion: '2010-12-01'});
-
-// send to list
-var to = ['email@example.com']
-
-// this must relate to a verified SES account
-var from = 'no-reply@hobbyapp.co';
+const ses = new aws.SES({apiVersion: '2010-12-01'});
 
 router.use(function(req, res, next) {
   let token = req.headers['x-access-token'];
@@ -126,7 +122,7 @@ router.post('/add-hobby', function(req, res, next){
     .then((message) => {
       console.log(message);
       ses.sendEmail( { 
-         Source: from, 
+         Source: "awotunde.emmanuel1@gmail.com", 
          Destination: { ToAddresses: [req.decoded.email] },
          Message: {
              Subject: {
@@ -157,7 +153,7 @@ router.post('/add-hobby', function(req, res, next){
     .catch(function(sms_err) {
       console.error(sms_err);
       ses.sendEmail( { 
-         Source: from, 
+         Source: "awotunde.emmanuel1@gmail.com", 
          Destination: { ToAddresses: [req.decoded.email] },
          Message: {
              Subject: {
@@ -189,17 +185,17 @@ router.post('/add-hobby', function(req, res, next){
   }).catch(next);
 });
 
-router.put('/edit-hobby/', function(req, res, next){
-  req.check("title", "Enter a valid title, Max of 30 chars.").exists().isLength({max: 30});
-  req.check("body", "Enter a valid description, Max of 140 chars like twitter.").exists().isLength({max: 140});
-  var errors = req.validationErrors();
-        if (errors)
-          return res.status(422).json({ success:false, message: 'there are invalid inputs', type:2, errors:errors});
-  Hobby.findByIdAndUpdate({user_id: req.decoded.user_id, _id: req.body.hobby_id})
-  .then(function(hobby){
-    return res.send(hobby);
-  }).catch(next);
-});
+// router.put('/edit-hobby/', function(req, res, next){
+//   req.check("title", "Enter a valid title, Max of 30 chars.").exists().isLength({max: 30});
+//   req.check("body", "Enter a valid description, Max of 140 chars like twitter.").exists().isLength({max: 140});
+//   var errors = req.validationErrors();
+//         if (errors)
+//           return res.status(422).json({ success:false, message: 'there are invalid inputs', type:2, errors:errors});
+//   Hobby.findByIdAndUpdate({user_id: req.decoded.user_id, _id: req.body.hobby_id})
+//   .then(function(hobby){
+//     return res.send(hobby);
+//   }).catch(next);
+// });
 
 router.delete('/remove-hobby/:id', function(req, res, next){
   Hobby.findOneAndRemove({user_id: req.decoded.user_id, _id: req.params.id})
@@ -210,4 +206,35 @@ router.delete('/remove-hobby/:id', function(req, res, next){
 });
 // END OF API FOR HOBBY MANIPULATION
 
+// API for changing password
+router.post('/change-password', function(req, res) {  
+  User.findOne({
+      username: req.decoded.username
+    }, function(err, user) {
+    if (err) throw err;
+    if (!user.validPassword(req.body.old_password)) {
+      res.status(422).json({ success: false, message: 'Authentication failed. Wrong password supplied.' });
+    } else if (user.validPassword(req.body.old_password)) {
+        req.check("new_password", "Passwords must be at least 8 chars long and contain one number").isLength({min: 8}).matches(/\d/);
+        var errors = req.validationErrors();
+        if (errors)
+          return res.status(422).json({ success:false, message: 'Passwords must be at least 8 chars long and contain one number',
+          type:2, errors:errors});
+
+        user.password = user.generateHash(req.body.new_password);
+        user.save(function(err) {
+          if (err) {
+            return res.status(422).json({success: false, message: 'Error occured while changing password...',});
+            }
+          return res.json({
+              success: true,
+              message: 'Successfully changed password!'});
+          });
+      }
+      // return res.status(422).json({success: false, message: 'Error occured while changing password...',});
+  });
+});
+
 module.exports = router;
+
+// newUser.password = newUser.generateHash(req.body.password);

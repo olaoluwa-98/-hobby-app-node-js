@@ -12,7 +12,7 @@ const jwt = require('jsonwebtoken');
 const sha1 = require('sha1');
 const validator = require('express-validator');
 
-var aws = require('aws-sdk');
+const aws = require('aws-sdk');
 aws.config.loadFromPath('config.json');
 
 mongoose.Promise = require('bluebird');
@@ -57,10 +57,10 @@ app.post('/login', function(req, res) {
         const payload = {
           user_id: user._id,
           username: user.username,
-          phone_no: newUser.phone_no,
-          email: newUser.email
+          phone_no: user.phone_no,
+          email: user.email
         };
-        var token = jwt.sign(payload, app.get('hobby_secret'), { expiresIn: 1440*60 });
+        const token = jwt.sign(payload, app.get('hobby_secret'), { expiresIn: 1440*60 });
         return res.json({
           success: true,
           message: 'Enjoy your token!',
@@ -121,7 +121,7 @@ app.post('/register', function(req, res) {
               phone_no: newUser.phone_no,
               email: newUser.email
             };      
-          var token = jwt.sign(payload, app.get('hobby_secret'), { expiresIn: 1440 * 60 } );
+          const token = jwt.sign(payload, app.get('hobby_secret'), { expiresIn: 1440 * 60 } );
           return res.json({
               success: true,
               message: 'Successfully registered. Enjoy your token!',
@@ -150,9 +150,7 @@ app.post('/register', function(req, res) {
           return res.status(422).json({success: false, message: 'Email already being used', errors:['Email already being used']});
         }        
       }
-    });
-
-    
+    }); 
   }
 });
 

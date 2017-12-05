@@ -1,9 +1,10 @@
-var mongoose = require('mongoose');
-var bcrypt   = require('bcrypt-nodejs');
+const mongoose = require('mongoose');
+const bcrypt   = require('bcrypt-nodejs');
 const sha1 = require('sha1');
+// const uniqueValidator = require('mongoose-unique-validator');
 
 // define the schema for our user model
-var UserSchema = mongoose.Schema({
+const UserSchema = mongoose.Schema({
     email: {
         type: String,
         unique: true,
@@ -22,6 +23,11 @@ var UserSchema = mongoose.Schema({
     email_token: {
         type: String,
         required: ['true', 'Email token of the user is required']
+    },
+
+    reset_token: {
+        type: String,
+        default: null
     },
 
     username: {
@@ -82,6 +88,8 @@ UserSchema.pre('save', function(next) {
 
   next();
 });
+
+// UserSchema.plugin(uniqueValidator);
 
 UserSchema.post('save', function(error, doc, next) {
   if (error.name === 'MongoError' && error.code === 11000) {
