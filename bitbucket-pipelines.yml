@@ -13,4 +13,4 @@ pipelines:
         script: # Modify the commands below to build your repository.
           - npm install
           - git push https://heroku:c818427d-b0c8-425b-bb36-200f9ccba13c@git.heroku.com/hobbyapp-api.git HEAD
-          - nodemon
+          - npm start
