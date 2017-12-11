@@ -17,8 +17,9 @@ aws.config.loadFromPath('config.json');
 
 mongoose.Promise = require('bluebird');
 
+const mongodb = process.env.MONGODB_URI || 'mongodb://localhost/hobbydb';
 // connect to db
-mongoose.connect('mongodb://localhost/hobbydb', { config:{ autoIndex: false}, useMongoClient: true })
+mongoose.connect(mongodb, { config:{ autoIndex: false}, useMongoClient: true })
   .then(() =>  console.log('connection successful, we\'re ready to fetch your stuff'))
   .catch((err) => console.error(err));
 

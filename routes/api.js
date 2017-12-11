@@ -132,7 +132,7 @@ router.post('/add-hobby', function(req, res, next){
                  Text: {
                      Data: '\n--Message from Emmanuel Awotunde\'s HobbyApp--'
                           + '\nHello @' + req.decoded.username
-                          + '\nYou Added A new Hobby Successfully\nTitle:\t' + hobby.title
+                          + '\nYou Added A New Hobby Successfully\nTitle:\t' + hobby.title
                           + '\nDescription:\t' + hobby.body
                           + '\n At ' + hobby.created_at,
                  }
@@ -163,7 +163,7 @@ router.post('/add-hobby', function(req, res, next){
                  Text: {
                      Data: '\n--Message from Emmanuel Awotunde\'s HobbyApp--'
                           + '\nHello @' + req.decoded.username
-                          + '\nYou Added A new Hobby Successfully\nTitle:\t' + hobby.title
+                          + '\nYou Added A New Hobby Successfully\nTitle:\t' + hobby.title
                           + '\nDescription:\t' + hobby.body
                           + '\n At ' + hobby.created_at,
                  }
